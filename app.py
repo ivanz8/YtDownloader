@@ -32,13 +32,21 @@ def download_video():
             'outtmpl': output_file,
             'format': 'best[ext=mp4]',  # Download the best available MP4 format
             'noplaylist': True,
-            'quiet': True,
+            'quiet': False,  # Set to False for detailed output
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         
+        # Verify file existence
+        if os.path.exists(output_file):
+            print("File exists.")
+        else:
+            print("File does not exist.")
+        
+        # Return file as an attachment for download
         return send_file(output_file, as_attachment=True, attachment_filename=file_name + '.mp4')
     except Exception as e:
+        print(f"Error: {e}")
         return str(e), 500
 
 if __name__ == '__main__':
