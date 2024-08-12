@@ -14,37 +14,43 @@ def download_video():
     file_name = request.form.get('file_name')
     
     # Debugging output
-    print(f"URL: {url}")
-    print(f"File Name: {file_name}")
+    print(f"Current Working Directory: {os.getcwd()}")
     
     if not url or not file_name:
         return 'URL or file name not provided', 400
 
     # Define the output file path
-    download_dir = 'downloads'
+    download_dir = os.path.join(os.getcwd(), 'downloads')
+    print(f"Download Directory: {download_dir}")
+
     if not os.path.exists(download_dir):
+        print(f"Directory does not exist. Creating: {download_dir}")
         os.makedirs(download_dir)
-        
+    
     output_file = os.path.join(download_dir, file_name + '.mp4')
+    print(f"Output File Path: {output_file}")
     
     try:
         ydl_opts = {
             'outtmpl': output_file,
             'format': 'best[ext=mp4]',  # Download the best available MP4 format
             'noplaylist': True,
-            'quiet': False,  # Set to False for detailed output
+            'quiet': True,  # Set to False for detailed output
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         
         # Verify file existence
-        if os.path.exists(output_file):
-            print("File exists.")
-        else:
-            print("File does not exist.")
+        if not os.path.isfile(output_file):
+            return 'File not found on server', 404
         
-        # Return file as an attachment for download
-        return send_file(output_file, as_attachment=True, attachment_filename=file_name + '.mp4')
+        # Send file as an attachment for download
+        return send_file(
+            output_file,
+            as_attachment=True,
+            download_name=file_name + '.mp4',  # Use download_name instead of attachment_filename
+            mimetype='video/mp4'
+        )
     except Exception as e:
         print(f"Error: {e}")
         return str(e), 500
